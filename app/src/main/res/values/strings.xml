@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">PhoneBlocker</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="add_number">Add a number.</string>
+    <string name="remove_number">Remove a number.</string>
+    <string name="list">List of blocked calls.</string>
+    <string name="report">Report.</string>
+    <string name="CheckText1">Check number.</string>
+    <string name="ReportText1">Report number.</string>
+    <string name="DownloadText1">Download database.</string>
+
+</resources>

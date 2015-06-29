@@ -1,0 +1,4 @@
+F:\Users\Marek\DOKUMENTY\PROGRAMY\CallBlocker\Zdrojaky\BlockerTm\PhoneBlocker\app\build\intermediates\classes\debug
+F:\Users\Marek\DOKUMENTY\PROGRAMY\CallBlocker\Zdrojaky\BlockerTm\PhoneBlocker\app\build\intermediates\pre-dexed\debug\support-annotations-21.0.0-7fd9eab825d608435eb304fdaff86a7320117943.jar
+F:\Users\Marek\DOKUMENTY\PROGRAMY\CallBlocker\Zdrojaky\BlockerTm\PhoneBlocker\app\build\intermediates\pre-dexed\debug\internal_impl-21.0.0-1e5564f4a1a35ca99d79e1ef5c3fe8677bd80908.jar
+F:\Users\Marek\DOKUMENTY\PROGRAMY\CallBlocker\Zdrojaky\BlockerTm\PhoneBlocker\app\build\intermediates\pre-dexed\debug\classes-6a2714150270ffa9b289abd12a1efdfa6aabb095.jar

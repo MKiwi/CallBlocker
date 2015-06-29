@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="focus" type="color">#DFDCE6</item>
+    <item name="press" type="color">#DFDCE6</item>
+    <item name="draw" type="color">#FFFFFF</item>
+</resources>

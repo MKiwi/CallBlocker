@@ -1,0 +1,229 @@
+package com.example.phoneblocker;
+
+import android.app.IntentService;
+import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.media.AudioManager;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.os.Vibrator;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
+import android.util.Log;
+import android.widget.Toast;
+
+import com.android.internal.telephony.ITelephony;
+
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Objects;
+
+/**
+ * Created by Marek Turza on 12/13/2014.
+ */
+public class CallBlockService extends Service {
+
+    /*----!!!!! THIS CODE CONTAINS TODO SECTIONS   !!!! --------- */
+
+    //------------------------
+    //GLOBAL VARIABLES SECTION
+    private Context context;
+    private boolean BlockingEnabled;
+    private TelephonyManager TelMan;
+    private BroadcastReceiver CallReceiver;
+    private HashSet<String> NumbersDatabase;
+    private AudioManager AudioManager;
+    private Vibrator Vibrator;
+    int PreviousRingMode ;
+    //END OF GLOBAL VARIABLES SECTION
+    //-------------------------------
+
+    //--------------------
+    //CONSTRUCTORS SECTION
+    /**Constructor
+     * Do not use this class by calling constructor, this class is IntentService.
+     * For launching this IntentService use startService(new Intent(this, CallBlockService.class));
+     * (or similar command) in your application.
+     * */
+    public CallBlockService(){
+        super();
+        Log.d("CallBlockerService, CallBlockerService constructor: ", "instance created!");
+    }
+    /**On create block
+     * This method is called by system and should not be used in other way.
+     * */
+    @Override
+    public void onCreate(){
+        super.onCreate();
+        context = this;
+        BlockingEnabled = false;
+        Initialize();
+        StartBlocking();
+        Log.d("CallBlockerService, onCreate: ", "method finished.");
+    }
+    //END OF CONSTRUCTORS SECTION
+    //---------------------------
+
+    //--------------
+    //INITIALIZATION
+    /**LOAD DATABASE OF NUMBERS WHICH SHOULD BE BLOCKED TO HASHSET
+     * INITIALIZE VARIABLES: NumbersDatabase, PreviousRingMode, PreviousVolume
+     * SETS:
+     * */
+    private void Initialize(){
+        NumbersDatabase = loadDatabase();
+        TelMan = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        AudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        Vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        PreviousRingMode = AudioManager.getRingerMode();
+        MakeCallReceiver();
+        Log.d("CallBlockerService, Initialize: ", "method finished.");
+    }
+
+    //---------------------
+    //SUPPLEMENTARY METHODS
+    /**Loads phone numbers to be blocked from file to hashset.
+     *@return HashSet<String> of phone numbers
+     **/
+    protected HashSet<String> loadDatabase(){
+        HashSet<String> data = new HashSet<String>();
+        //TODO load phone numbers from appropriate source
+        //TEST
+        data.add("+421944254415");
+        data.add("+436606247773");
+        data.add("+421917789123");
+        data.add("+421917358610");
+        //END TEST
+        Log.d("CallBlockerService, loadDatabase: ", "method finished. Returning database.");
+        return data;
+    }
+
+    /**Method will register incoming call Listener
+     * @return true if Listener is registered in system
+     * @return false if Listener is not registered for some reason (variables not initialised)
+     *  */
+    public boolean StartBlocking() {
+        if (BlockingEnabled) {
+            Log.d("CallBlockerService, StartBlocking: ", "somebody trying to register registered CallReceiver");
+            return true;
+        }
+        if(CallReceiver == null) {
+            Log.w("CallBlockerService, StartBlocking: ", "somebody trying to start blocking on non-initialised CallReceiver. Returning false!");
+            return false;
+        }
+        IntentFilter filter = new IntentFilter("android.intent.action.PHONE_STATE");
+        filter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
+        context.registerReceiver(CallReceiver, filter);
+        BlockingEnabled = true;
+        Log.d("CallBlockerService, StartBlocking: ", "incoming call blocking enabled.");
+        return true;
+    }
+    /***Method will unregister incoming call Listener
+     * @return true if Listener is  unregistered in system
+     * @return false if Listener is not unregistered for some reason (variables not initialised)
+     * */
+    public boolean StopBlocking(){
+        if(!BlockingEnabled){
+            Log.d("CallBlockerService, StopBlocking: ", "somebody trying to unregister unregistered CallReceiver.");
+            return true;
+        }
+        if(CallReceiver == null){
+            Log.w("CallBlockerService, StopBlocking: ", "somebody trying to stop blocking on non-initialised CallReceiver. Returning false!");
+            return false;
+        }
+        context.unregisterReceiver(CallReceiver);
+        BlockingEnabled = false;
+        Log.d("CallBlockerService, StopBlocking: ", "incoming call blocking disabled.");
+        return true;
+    }
+
+    //---------------------
+    //CALL BLOCKING METHODS
+    /**Method is invoked by CallReceiver when incoming number is hidden
+     * Method should decide whether hang up call or not according to user settings
+     * */
+    private void HiddenNumberCalling(){
+        // TODO hang up according to user settings
+    }
+    private void EndCall() {
+        try {
+            Class c = Class.forName(TelMan.getClass().getName());
+            Method m = c.getDeclaredMethod("getITelephony");
+            m.setAccessible(true);
+            com.android.internal.telephony.ITelephony telephonyService = (ITelephony) m.invoke(TelMan);
+            telephonyService.endCall();
+            Log.d("CallBlockerService, EndCall: ","incoming call successfully hang up!");
+        } catch (Exception e) {
+            Log.e("CallBlockerService, EndCall method exception: ", e.getMessage());
+            Log.e("CallBlockerService, EndCall method exception calss state details: ","");
+            Log.e("BlockingEnabled setting: ", ""+BlockingEnabled);
+            e.printStackTrace();
+        }
+    }
+    /**MakeCallReceiver will initialize CallReceiver variable
+     * */
+    private void MakeCallReceiver(){
+        if(CallReceiver != null)Log.w("CallBlockerService, MakeCallReceiver warning: ", "CallReceiver variable is currently initialized");
+        CallReceiver = new BroadcastReceiver() {
+            // TODO !!! OVERIT CI SA VYKONA BLOK NAOZAJ LEN KED PRICHADZA HOVOR (CI SA NEVYKONAVA AJ PRI ODCHADZAJUCOM HOVORE) !!!
+            // TODO !!! TENTO KOD JE CUDNY, (ALE FUNGUJE (which is nice..)) ZVAZIT JEHO KOMPLETNE PREROBENIE PODLA stackoverflow.txt
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                PreviousRingMode = AudioManager.getRingerMode();
+                //Log.d("onReceive, previous ring mode: ", ""+PreviousRingMode);
+                AudioManager.setStreamMute(AudioManager.STREAM_RING, true);
+                AudioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+                Vibrator.cancel();
+                TelMan.listen(PhoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+                Vibrator.cancel();
+                AudioManager.setRingerMode(PreviousRingMode);
+                AudioManager.setStreamMute(AudioManager.STREAM_RING, false);
+                Vibrator.cancel();
+                //Log.d("onReceive, ring mode set to: ", "" + AudioManager.getMode());
+            }
+            android.telephony.PhoneStateListener PhoneStateListener = new PhoneStateListener() {
+                public void onCallStateChanged(int state, String IncomingNumber) {
+                    if (state == TelephonyManager.CALL_STATE_RINGING) {
+                        if (IncomingNumber == null){
+                            HiddenNumberCalling();
+                        } else {
+                            if (NumbersDatabase.contains(IncomingNumber)) EndCall();
+                        }
+                        AudioManager.setRingerMode(PreviousRingMode);
+                        AudioManager.setStreamMute(AudioManager.STREAM_RING,false);
+                        //Log.d("onCallStateChanged, ring mode set to: ", ""+AudioManager.getMode());
+                    }
+                }
+            };
+        };
+        Log.d("CallBlockerService, MakeCallReceiver: ", " method finished.");
+    }
+
+    //END OF SUPPLEMENTARY METHODS SECTION
+    //------------------------------------
+
+    //----------------------
+    //SERVICE METHODS
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        StartBlocking();
+        super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
+    }
+    @Override
+    public void onDestroy(){
+       StopBlocking();
+        super.onDestroy();
+    }
+
+    //END OF SERVICE METHODS SECTION
+    //-------------------------------------
+}
